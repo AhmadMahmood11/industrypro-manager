@@ -1,0 +1,2 @@
+import { Link } from 'react-router-dom';
+export default function NotFound(){return <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4"><div className="card max-w-md text-center"><h1 className="text-4xl font-black text-slate-900">404</h1><p className="mt-2 text-slate-600">This page does not exist.</p><Link className="btn-primary mt-5" to="/dashboard">Go to Dashboard</Link></div></div>;}

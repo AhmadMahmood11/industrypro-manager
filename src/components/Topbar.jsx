@@ -1,0 +1,3 @@
+import { LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext.jsx';
+export default function Topbar(){ const {user,logout}=useAuth(); return <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur"><div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"><div><p className="text-sm text-slate-500">Welcome back</p><h1 className="text-lg font-bold text-slate-900">{user?.name}</h1></div><div className="flex items-center gap-3"><span className="badge bg-slate-100 text-slate-700 capitalize">{user?.role}</span><button className="btn-secondary" onClick={logout}><LogOut size={16} className="mr-2"/> Logout</button></div></div></header>; }

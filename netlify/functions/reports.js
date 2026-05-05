@@ -1,0 +1,14 @@
+import { getUserFromEvent } from './_utils/auth.js';
+import { supabase } from './_utils/supabase.js';
+import { badRequest, forbidden, ok, optionsResponse, serverError, unauthorized } from './_utils/response.js';
+function applyDate(query,column,q){ if(q.startDate)query=query.gte(column,q.startDate); if(q.endDate)query=query.lte(column,q.endDate); return query; }
+export async function handler(event){
+  if(event.httpMethod==='OPTIONS') return optionsResponse();
+  try{await getUserFromEvent(event); const q=event.queryStringParameters||{}; const type=q.type||'profit';
+    if(['income','expense','profit'].includes(type)){let query=supabase.from('transactions').select('*').order('transaction_date',{ascending:false}); query=applyDate(query,'transaction_date',q); if(type==='income')query=query.eq('type','income'); if(type==='expense')query=query.eq('type','expense'); const {data,error}=await query; if(error)return badRequest(error.message); const rows=data||[]; const income=rows.filter(r=>r.type==='income').reduce((s,r)=>s+Number(r.amount||0),0); const expense=rows.filter(r=>r.type==='expense').reduce((s,r)=>s+Number(r.amount||0),0); return ok({type,summary:{income,expense,profit:income-expense,records:rows.length},rows});}
+    if(type==='stock'||type==='low_stock'){const {data,error}=await supabase.from('products').select('*').order('name'); if(error)return badRequest(error.message); const rows=type==='low_stock'?(data||[]).filter(p=>Number(p.quantity)<=Number(p.minimum_stock_level)):(data||[]); const stockValue=rows.reduce((s,p)=>s+Number(p.quantity||0)*Number(p.purchase_price||0),0); return ok({type,summary:{products:rows.length,stock_value:stockValue},rows});}
+    if(type==='attendance'){let query=supabase.from('attendance').select('*, employees(name, department, designation)').order('attendance_date',{ascending:false}); query=applyDate(query,'attendance_date',q); const {data,error}=await query; if(error)return badRequest(error.message); const rows=data||[]; return ok({type,summary:{records:rows.length,present:rows.filter(r=>r.status==='present').length,absent:rows.filter(r=>r.status==='absent').length,overtime_hours:rows.reduce((s,r)=>s+Number(r.overtime_hours||0),0)},rows});}
+    if(type==='payroll'){const {data,error}=await supabase.from('payroll').select('*, employees(name, department, designation)').order('payroll_month',{ascending:false}); if(error)return badRequest(error.message); const rows=data||[]; return ok({type,summary:{records:rows.length,net_salary:rows.reduce((s,r)=>s+Number(r.net_salary||0),0),paid:rows.filter(r=>r.status==='paid').length,unpaid:rows.filter(r=>r.status==='unpaid').length},rows});}
+    return badRequest('Invalid report type.');
+  }catch(error){ if(error.statusCode===401)return unauthorized(error.message); if(error.statusCode===403)return forbidden(error.message); return serverError(error); }
+}

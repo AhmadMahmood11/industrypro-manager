@@ -1,0 +1,2 @@
+import Modal from './Modal.jsx';
+export default function ConfirmDialog({open,title='Are you sure?',message,onCancel,onConfirm}){ return <Modal open={open} title={title} onClose={onCancel}><p className="text-slate-600">{message}</p><div className="mt-6 flex justify-end gap-3"><button className="btn-secondary" onClick={onCancel}>Cancel</button><button className="btn-danger" onClick={onConfirm}>Delete</button></div></Modal>; }
